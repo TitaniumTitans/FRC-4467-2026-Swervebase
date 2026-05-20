@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Vision;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -31,6 +32,7 @@ public class RobotContainer {
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
+    private final Vision vision = new Vision();
 
     private final CommandXboxController joystick = new CommandXboxController(0);
 
@@ -75,6 +77,15 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+
+        // periodically check the vision
+        Commands.run(() -> {
+            var estimate = vision.getVisionUpdate();
+            if (estimate.isPresent()) {
+                var result = estimate.get();
+                drivetrain.addVisionMeasurement(result.estimatedPose.toPose2d(), result.timestampSeconds);
+            }
+        });
     }
 
     public Command getAutonomousCommand() {
