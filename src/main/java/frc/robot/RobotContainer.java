@@ -11,6 +11,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -79,13 +80,13 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
 
         // periodically check the vision
-        Commands.run(() -> {
+        RobotModeTriggers.teleop().whileTrue(Commands.run(() -> {
             var estimate = vision.getVisionUpdate();
             if (estimate.isPresent()) {
                 var result = estimate.get();
                 drivetrain.addVisionMeasurement(result.estimatedPose.toPose2d(), result.timestampSeconds);
             }
-        });
+        }));
     }
 
     public Command getAutonomousCommand() {

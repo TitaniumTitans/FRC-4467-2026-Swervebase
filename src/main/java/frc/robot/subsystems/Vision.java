@@ -5,9 +5,11 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.targeting.PhotonPipelineResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,12 +30,21 @@ public class Vision {
   public Optional<EstimatedRobotPose> getVisionUpdate() {
     Optional<EstimatedRobotPose> visionEst = Optional.empty();
 
-    // loop over every result from the camera
-    var result = mCamera.getAllUnreadResults().get(0);
+    // get the first result from the camera
+    List<PhotonPipelineResult> results = mCamera.getAllUnreadResults();
+
+    if (results.isEmpty()) {
+      return Optional.empty();
+    }
+
+    var result = results.get(0);
+
     visionEst = mPoseEstimator.estimateCoprocMultiTagPose(result);
     if (visionEst.isEmpty()) {
       visionEst = mPoseEstimator.estimateLowestAmbiguityPose(result);
     }
+
+    SmartDashboard.putBoolean("Camera Has Result?", visionEst.isPresent());
 
     return visionEst;
   }
